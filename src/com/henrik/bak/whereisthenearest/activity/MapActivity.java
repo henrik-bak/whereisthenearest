@@ -3,9 +3,9 @@ package com.henrik.bak.whereisthenearest.activity;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -18,10 +18,10 @@ import com.henrik.bak.whereisthenearest.R;
 import com.henrik.bak.whereisthenearest.model.Place;
 import com.henrik.bak.whereisthenearest.model.PlacesList;
 import com.henrik.bak.whereisthenearest.places.PlaceRequest;
+import com.henrik.bak.whereisthenearest.routing.Routing;
 
 public class MapActivity extends Activity {
 
-	private final String TAG = getClass().getSimpleName();
 	private GoogleMap mMap;
 	private String queryString;
 
@@ -96,10 +96,12 @@ public class MapActivity extends Activity {
 			if (dialog.isShowing()) {
 				dialog.dismiss();
 			}
+			
+			LatLng testStart =  new LatLng(46.2508925602, 20.1597201082);
 						
 			mMap.addMarker(new MarkerOptions()
 			.title("asd")
-			.position(new LatLng(46.2508925602, 20.1597201082)));
+			.position(testStart));
 			
 			for (Place place : result.getResults()) {
 					mMap.addMarker(new MarkerOptions()
@@ -109,6 +111,12 @@ public class MapActivity extends Activity {
 							.snippet(place.getVicinity()));
 
 			}
+			
+			LatLng nearestEndPoint = new LatLng(result.getResults().get(0).getGeometry().getLocation().getLat(), 
+												result.getResults().get(0).getGeometry().getLocation().getLng());
+			
+			new Routing(context,mMap, Color.parseColor("#ff0000")).execute(testStart, nearestEndPoint);
+			
 
 			CameraPosition cameraPosition = new CameraPosition.Builder()
 			.target(new LatLng(result.getResults().get(0).geometry.getLocation().getLat(),
