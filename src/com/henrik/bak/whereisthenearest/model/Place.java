@@ -1,6 +1,7 @@
 package com.henrik.bak.whereisthenearest.model;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.api.client.util.Key;
@@ -211,6 +212,13 @@ public class Place implements Serializable {
 
 	@Override
 	public String toString() {
-		return name + " - " + id + " - " + reference;
+		return "Place [id=" + id + ", name=" + name + ", reference="
+				+ reference + ", types=" + Arrays.toString(types)
+				+ ", international_phone_number=" + international_phone_number
+				+ ", vicinity=" + vicinity + ", formatted_address="
+				+ formatted_address + ", url=" + url + ", rating=" + rating
+				+ ", website=" + website + ", address_components="
+				+ address_components + ", long_name=" + long_name
+				+ ", short_name=" + short_name + ", geometry=" + geometry + "]";
 	}
 }

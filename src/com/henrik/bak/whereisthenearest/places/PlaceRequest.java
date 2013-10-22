@@ -70,7 +70,7 @@ public class PlaceRequest {
 			reqUrl.put("radius", 5000); // radius of 5Km 
 			reqUrl.put("types", param);
 			reqUrl.put("sensor", "false");
-			reqUrl.put("rankby","distance");
+			//reqUrl.put("rankby","distance");
 			Log.v(LOG_KEY, "Requested URL= " + reqUrl);
 			HttpRequestFactory httpRequestFactory = createRequestFactory(transport);
 			HttpRequest request = httpRequestFactory.buildGetRequest(reqUrl);

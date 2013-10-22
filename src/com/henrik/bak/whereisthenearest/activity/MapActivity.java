@@ -1,30 +1,43 @@
 package com.henrik.bak.whereisthenearest.activity;
 
-import android.app.Activity;
+import java.util.HashMap;
+import java.util.Map;
+
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.henrik.bak.whereisthenearest.R;
 import com.henrik.bak.whereisthenearest.model.Place;
+import com.henrik.bak.whereisthenearest.model.PlaceDetails;
 import com.henrik.bak.whereisthenearest.model.PlacesList;
 import com.henrik.bak.whereisthenearest.places.PlaceRequest;
-import com.henrik.bak.whereisthenearest.routing.Routing;
 
-public class MapActivity extends Activity {
+public class MapActivity extends FragmentActivity {
 
 	private GoogleMap mMap;
 	private String queryString;
 
+	private Button btnDetails;
+	private Button btnRoute;
+	private Map<Marker, String> markerMap;
+	private String reference;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -52,8 +65,49 @@ public class MapActivity extends Activity {
 	}
 
 	private void initCompo() {
-		mMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map))
+		mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
 				.getMap();
+		mMap.setOnMarkerClickListener(getOnMarkerClickListener());
+		btnDetails = (Button) findViewById(R.id.btnDetails);
+		btnRoute = (Button) findViewById(R.id.btnRoute);
+		initOnClickHandlers();
+	}
+	
+	private OnMarkerClickListener getOnMarkerClickListener()
+	{
+	    return new OnMarkerClickListener() {
+			
+			@Override
+			public boolean onMarkerClick(Marker arg0) {
+				reference = markerMap.get(arg0);
+				return false;
+			}
+		};      
+	    	
+	}
+
+
+	private void initOnClickHandlers() {
+		btnDetails.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				if (!reference.isEmpty()) {
+					new DetailSrv(MapActivity.this, reference).execute();
+				}
+				
+			}
+		});
+		
+		btnRoute.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
 	}
 
 
@@ -100,22 +154,21 @@ public class MapActivity extends Activity {
 			LatLng testStart =  new LatLng(46.2508925602, 20.1597201082);
 						
 			mMap.addMarker(new MarkerOptions()
-			.title("asd")
+			.title("Your current location")
 			.position(testStart));
 			
+			markerMap = new HashMap<Marker, String>();
+			
 			for (Place place : result.getResults()) {
-					mMap.addMarker(new MarkerOptions()
+					Marker m = mMap.addMarker(new MarkerOptions()
 					.title(place.getName())
 					.position(new LatLng(place.geometry.getLocation().getLat(),
 							place.geometry.getLocation().getLng()))
 							.snippet(place.getVicinity()));
-
+					markerMap.put(m, place.getReference());
 			}
 			
-			LatLng nearestEndPoint = new LatLng(result.getResults().get(0).getGeometry().getLocation().getLat(), 
-												result.getResults().get(0).getGeometry().getLocation().getLng());
-			
-			new Routing(context,mMap, Color.parseColor("#ff0000")).execute(testStart, nearestEndPoint);
+			//new Routing(context,mMap, Color.parseColor("#ff0000")).execute(testStart, nearestEndPoint);
 			
 
 			CameraPosition cameraPosition = new CameraPosition.Builder()
@@ -127,6 +180,51 @@ public class MapActivity extends Activity {
 					.build(); // Creates a CameraPosition from the builder
 					mMap.animateCamera(CameraUpdateFactory
 							.newCameraPosition(cameraPosition));
+		}
+	}	// End of class SearchSrv here
+	
+	
+	private class DetailSrv extends AsyncTask<Void, Void, PlaceDetails>{
+
+		private ProgressDialog dialog;
+		private Context context;
+		private String param;
+
+		public DetailSrv(Context context, String param) {
+			this.context = context;
+			this.param = param;
+		}
+
+		@Override
+		protected PlaceDetails doInBackground(Void... params) {
+			PlaceDetails details = null;
+			try {
+				// send place search request from here
+				details = new PlaceRequest().performDetails(param);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return details;
+		}
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			dialog = new ProgressDialog(context);
+			dialog.setCancelable(false);
+			dialog.setMessage("Loading..");
+			dialog.isIndeterminate();
+			dialog.show();
+		}
+
+		@Override
+		protected void onPostExecute(PlaceDetails result) {
+			super.onPostExecute(result);
+			if (dialog.isShowing()) {
+				dialog.dismiss();
+			}
+			
+			Log.d("MAUNIKA", result.toString());
 		}
 	}	// End of class SearchSrv here
 
